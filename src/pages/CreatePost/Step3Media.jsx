@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { useVoiceRecorder } from '../../hooks/useVoiceRecorder'
 import VoicePlayer from '../../components/VoicePlayer'
 
@@ -9,6 +9,9 @@ export default function Step3Media({ onNext, onBack, initialData = {} }) {
   const [description, setDescription] = useState(initialData.description ?? '')
   const fileInputRef = useRef(null)
   const { status, audioBlob, audioUrl, error: recError, startRecording, stopRecording, clearRecording } = useVoiceRecorder()
+
+  const previewUrls = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images])
+  useEffect(() => () => previewUrls.forEach((u) => URL.revokeObjectURL(u)), [previewUrls])
 
   function handleFileChange(e) {
     const files = Array.from(e.target.files ?? [])
@@ -40,7 +43,7 @@ export default function Step3Media({ onNext, onBack, initialData = {} }) {
           {images.map((file, i) => (
             <div key={i} className="relative w-20 h-20">
               <img
-                src={URL.createObjectURL(file)}
+                src={previewUrls[i]}
                 alt={`صورة ${i + 1}`}
                 className="w-20 h-20 rounded-xl object-cover"
               />

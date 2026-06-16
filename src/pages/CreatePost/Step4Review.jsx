@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import PostCard from '../../components/PostCard'
 import { useAuthStore } from '../../store/authStore'
 import { useNetworks } from '../../hooks/useNetworks'
@@ -8,9 +8,15 @@ import { compressImage, uploadMedia } from '../../lib/mediaUtils'
 export default function Step4Review({ data, onBack, onDone }) {
   const { session, profile } = useAuthStore()
   const { networks } = useNetworks()
-  const [selectedNetworks, setSelectedNetworks] = useState(networks.map((n) => n.id))
+  const [selectedNetworks, setSelectedNetworks] = useState([])
   const [publishing, setPublishing] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (networks.length > 0 && selectedNetworks.length === 0) {
+      setSelectedNetworks(networks.map((n) => n.id))
+    }
+  }, [networks])
 
   function toggleNetwork(id) {
     setSelectedNetworks((prev) =>
@@ -18,7 +24,19 @@ export default function Step4Review({ data, onBack, onDone }) {
     )
   }
 
-  const previewImageUrls = (data.images ?? []).map((f) => URL.createObjectURL(f))
+  const previewImageUrls = useMemo(
+    () => (data.images ?? []).map((f) => URL.createObjectURL(f)),
+    [data.images]
+  )
+  const previewAudioUrl = useMemo(
+    () => data.audioBlob ? URL.createObjectURL(data.audioBlob) : null,
+    [data.audioBlob]
+  )
+  useEffect(() => () => {
+    previewImageUrls.forEach((u) => URL.revokeObjectURL(u))
+    if (previewAudioUrl) URL.revokeObjectURL(previewAudioUrl)
+  }, [previewImageUrls, previewAudioUrl])
+
   const previewPost = {
     id: 'preview',
     type: data.type,
@@ -33,7 +51,7 @@ export default function Step4Review({ data, onBack, onDone }) {
     author: { pharmacy_name: profile?.pharmacy_name, city: profile?.city, lat: profile?.lat, lng: profile?.lng },
     media: [
       ...previewImageUrls.map((url) => ({ type: 'image', storage_url: url })),
-      ...(data.audioBlob ? [{ type: 'voice', storage_url: URL.createObjectURL(data.audioBlob) }] : []),
+      ...(previewAudioUrl ? [{ type: 'voice', storage_url: previewAudioUrl }] : []),
     ],
   }
 
@@ -80,7 +98,7 @@ export default function Step4Review({ data, onBack, onDone }) {
       }
       onDone()
     } catch (err) {
-      setError(err?.message ?? 'خطأ في النشر')
+      setError(err?.message ?? 'خطأ في النشر — قد يكون المنشور نُشر في بعض الشبكات')
     } finally {
       setPublishing(false)
     }
