@@ -2,7 +2,7 @@
   "name": "دوّار",
   "short_name": "دوّار",
   "description": "شبكة صيدليات — تصريف المنتجات قرب الانتهاء",
-  "start_url": "/",
+  "start_url": "/feed",
   "scope": "/",
   "id": "/",
   "display": "standalone",
