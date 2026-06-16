@@ -42,7 +42,7 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
           dir="ltr"
         />
 
-        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+        {error && <p className="text-brand-error text-sm text-center">{error}</p>}
 
         <button
           type="submit"

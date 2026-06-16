@@ -38,7 +38,7 @@ export default function PhoneStep({ onNext, country = 'JO' }) {
           dir="ltr"
         />
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-brand-error text-sm">{error}</p>}
 
         <button
           type="submit"

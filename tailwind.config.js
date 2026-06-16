@@ -13,6 +13,7 @@ export default {
           muted:    '#86efac',
           success:  '#4ade80',
           warning:  '#fbbf24',
+          error:    '#f87171',
           offer:    '#dc2626',
           wanted:   '#7c3aed',
           whatsapp: '#25d366',
