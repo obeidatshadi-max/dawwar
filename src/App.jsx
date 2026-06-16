@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useAuthInit } from './hooks/useAuth'
 import Onboarding from './pages/Onboarding/Onboarding'
+import JoinNetwork from './pages/JoinNetwork'
 
 function PrivateRoute({ children }) {
   const { session, loading } = useAuthStore()
@@ -40,6 +41,7 @@ export default function App() {
           </div>
         </PrivateRoute>
       } />
+      <Route path="/join" element={<JoinNetwork />} />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>
   )
