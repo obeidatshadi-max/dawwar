@@ -16,6 +16,7 @@ export default function Profile() {
   const [error, setError] = useState('')
 
   async function handleSave() {
+    if (saving) return
     if (!pharmacyName.trim() || !ownerName.trim() || !city.trim()) {
       setError('جميع الحقول مطلوبة')
       return
