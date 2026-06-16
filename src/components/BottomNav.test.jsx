@@ -35,4 +35,10 @@ describe('BottomNav', () => {
     wrap(<BottomNav />)
     expect(screen.queryByText('0')).toBeNull()
   })
+
+  it('shows 9+ when unread > 9', () => {
+    useUnreadCount.mockReturnValue(15)
+    wrap(<BottomNav />)
+    expect(screen.getByText('9+')).toBeInTheDocument()
+  })
 })
