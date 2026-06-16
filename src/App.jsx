@@ -7,6 +7,7 @@ import JoinNetwork from './pages/JoinNetwork'
 import Feed from './pages/Feed/Feed'
 import CreatePost from './pages/CreatePost/CreatePost'
 import Inbox from './pages/Messages/Inbox'
+import Thread from './pages/Messages/Thread'
 import Networks from './pages/Networks/Networks'
 import Profile from './pages/Profile/Profile'
 
@@ -51,7 +52,7 @@ export default function App() {
         <PrivateRoute><AppLayout><Inbox /></AppLayout></PrivateRoute>
       } />
       <Route path="/messages/:postId" element={
-        <PrivateRoute><AppLayout><Inbox /></AppLayout></PrivateRoute>
+        <PrivateRoute><AppLayout><Thread /></AppLayout></PrivateRoute>
       } />
       <Route path="/networks" element={
         <PrivateRoute><AppLayout><Networks /></AppLayout></PrivateRoute>
