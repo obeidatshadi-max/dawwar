@@ -1,10 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useAuthInit } from './hooks/useAuth'
+import AppLayout from './components/AppLayout'
 import Onboarding from './pages/Onboarding/Onboarding'
 import JoinNetwork from './pages/JoinNetwork'
 import Feed from './pages/Feed/Feed'
 import CreatePost from './pages/CreatePost/CreatePost'
+import Inbox from './pages/Messages/Inbox'
+import Networks from './pages/Networks/Networks'
+import Profile from './pages/Profile/Profile'
 
 function PrivateRoute({ children }) {
   const { session, loading } = useAuthStore()
@@ -36,10 +40,30 @@ export default function App() {
       <Route path="/onboarding" element={
         <PublicOnlyRoute><Onboarding /></PublicOnlyRoute>
       } />
-      <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
+      <Route path="/feed" element={
+        <PrivateRoute><AppLayout><Feed /></AppLayout></PrivateRoute>
+      } />
       <Route path="/join" element={<JoinNetwork />} />
       <Route path="/create" element={
         <PrivateRoute><CreatePost /></PrivateRoute>
+      } />
+      <Route path="/messages" element={
+        <PrivateRoute><AppLayout><Inbox /></AppLayout></PrivateRoute>
+      } />
+      <Route path="/messages/:postId" element={
+        <PrivateRoute><AppLayout><Inbox /></AppLayout></PrivateRoute>
+      } />
+      <Route path="/networks" element={
+        <PrivateRoute><AppLayout><Networks /></AppLayout></PrivateRoute>
+      } />
+      <Route path="/networks/new" element={
+        <PrivateRoute><Networks /></PrivateRoute>
+      } />
+      <Route path="/networks/:networkId/admin" element={
+        <PrivateRoute><AppLayout><Networks /></AppLayout></PrivateRoute>
+      } />
+      <Route path="/profile" element={
+        <PrivateRoute><AppLayout><Profile /></AppLayout></PrivateRoute>
       } />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>
