@@ -16,7 +16,11 @@ function PrivateRoute({ children }) {
 
 function PublicOnlyRoute({ children }) {
   const { session, loading, profile } = useAuthStore()
-  if (loading) return null
+  if (loading) return (
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (session && profile) return <Navigate to="/feed" replace />
   return children
 }

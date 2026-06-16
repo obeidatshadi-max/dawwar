@@ -15,6 +15,8 @@ export default function Onboarding() {
   const [country, setCountry] = useState('JO')
   const [phone, setPhone] = useState('')
   const [profileData, setProfileData] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const { setProfile } = useAuthStore()
   const navigate = useNavigate()
 
@@ -23,31 +25,36 @@ export default function Onboarding() {
     setStep('otp')
   }
 
-  function handleCountryChange(c) {
-    setCountry(c)
-  }
-
   function handleOTPNext() {
     setStep('profile')
   }
 
-  async function handleProfileNext(data) {
+  function handleProfileNext(data) {
     setProfileData(data)
     setStep('location')
   }
 
   async function handleLocationNext(locationData) {
-    const { data: { user } } = await supabase.auth.getUser()
-    const merged = { ...profileData, ...locationData }
-    await saveProfile(user.id, merged)
-    setProfile(merged)
-
-    const pendingToken = sessionStorage.getItem('pending_invite_token')
-    if (pendingToken) {
-      sessionStorage.removeItem('pending_invite_token')
-      navigate(`/join?token=${pendingToken}`)
-    } else {
-      navigate('/feed')
+    if (saving) return
+    setSaving(true)
+    setSaveError('')
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) throw error ?? new Error('جلسة منتهية، يرجى تسجيل الدخول مجددًا')
+      const merged = { ...profileData, ...locationData }
+      await saveProfile(user.id, merged)
+      setProfile(merged)
+      const pendingToken = sessionStorage.getItem('pending_invite_token')
+      if (pendingToken) {
+        sessionStorage.removeItem('pending_invite_token')
+        navigate(`/join?token=${encodeURIComponent(pendingToken)}`)
+      } else {
+        navigate('/feed')
+      }
+    } catch (err) {
+      setSaveError(err?.message ?? 'حدث خطأ، يرجى المحاولة مرة أخرى')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -61,6 +68,10 @@ export default function Onboarding() {
           style={{ width: `${progress}%` }}
         />
       </div>
+
+      {saveError && (
+        <p className="text-brand-error text-sm text-center mb-4">{saveError}</p>
+      )}
 
       <div className="flex-1">
         {step === 'phone' && (
