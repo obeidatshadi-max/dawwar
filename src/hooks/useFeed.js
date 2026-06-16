@@ -35,7 +35,7 @@ export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newe
             : null,
         }))
         if (radiusKm) {
-          result = result.filter((p) => p._distKm === null || p._distKm <= radiusKm)
+          result = result.filter((p) => p._distKm !== null && p._distKm <= radiusKm)
         }
         if (sortBy === 'nearest') {
           result = [...result].sort((a, b) => (a._distKm ?? Infinity) - (b._distKm ?? Infinity))

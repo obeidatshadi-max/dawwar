@@ -26,6 +26,7 @@ function makeQueryMock(data, error = null) {
     ilike: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     then: vi.fn((resolve) => resolve({ data, error })),
+    catch: vi.fn().mockReturnThis(),
   }
   supabase.from.mockReturnValue(chain)
   return chain
