@@ -6,14 +6,7 @@ export function useAuthInit() {
   const { setSession, setProfile, setLoading, clear } = useAuthStore()
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      if (session) {
-        const profile = await fetchProfile(session.user.id)
-        setProfile(profile)
-      }
-      setLoading(false)
-    })
+    let initialised = false
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -24,6 +17,10 @@ export function useAuthInit() {
         } else {
           clear()
         }
+        if (!initialised) {
+          initialised = true
+          setLoading(false)
+        }
       }
     )
 
@@ -32,24 +29,25 @@ export function useAuthInit() {
 }
 
 async function fetchProfile(userId) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .single()
+  if (error && error.code !== 'PGRST116') console.error('[fetchProfile]', error)
   return data
 }
 
-export async function sendOTP(phone) {
+export async function sendOTP(phone, country = 'JO') {
   const { error } = await supabase.auth.signInWithOtp({
-    phone: normalizePhone(phone),
+    phone: normalizePhone(phone, country),
   })
   if (error) throw error
 }
 
-export async function verifyOTP(phone, token) {
+export async function verifyOTP(phone, token, country = 'JO') {
   const { error } = await supabase.auth.verifyOtp({
-    phone: normalizePhone(phone),
+    phone: normalizePhone(phone, country),
     token,
     type: 'sms',
   })
@@ -68,10 +66,11 @@ export async function saveProfile(userId, data) {
 }
 
 // Exported for testing
-export function normalizePhone(phone) {
+export function normalizePhone(phone, country = 'JO') {
   const digits = phone.replace(/\D/g, '')
+  const countryCode = country === 'IQ' ? '964' : '962'
   if (digits.startsWith('00')) return '+' + digits.slice(2)
-  if (digits.startsWith('0'))  return '+962' + digits.slice(1)
+  if (digits.startsWith('0'))  return '+' + countryCode + digits.slice(1)
   if (!digits.startsWith('+')) return '+' + digits
   return phone
 }
