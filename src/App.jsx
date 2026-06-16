@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore'
 import { useAuthInit } from './hooks/useAuth'
 import Onboarding from './pages/Onboarding/Onboarding'
 import JoinNetwork from './pages/JoinNetwork'
+import Feed from './pages/Feed/Feed'
 
 function PrivateRoute({ children }) {
   const { session, loading } = useAuthStore()
@@ -34,13 +35,7 @@ export default function App() {
       <Route path="/onboarding" element={
         <PublicOnlyRoute><Onboarding /></PublicOnlyRoute>
       } />
-      <Route path="/feed" element={
-        <PrivateRoute>
-          <div className="min-h-screen bg-brand-bg flex items-center justify-center">
-            <p className="text-brand-muted">الرئيسية — قادمة في Plan B</p>
-          </div>
-        </PrivateRoute>
-      } />
+      <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
       <Route path="/join" element={<JoinNetwork />} />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>
