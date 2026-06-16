@@ -44,4 +44,26 @@ describe('ProfileStep', () => {
     fireEvent.click(screen.getByRole('button', { name: 'التالي' }))
     expect(onNext).not.toHaveBeenCalled()
   })
+
+  it('does not call onNext when fields are whitespace only', () => {
+    const onNext = vi.fn()
+    render(<ProfileStep onNext={onNext} />)
+    fireEvent.change(screen.getByPlaceholderText('اسم الصيدلية'), { target: { value: '   ' } })
+    fireEvent.change(screen.getByPlaceholderText('اسم المالك'), { target: { value: '   ' } })
+    fireEvent.change(screen.getByPlaceholderText('رقم الواتساب'), { target: { value: '   ' } })
+    fireEvent.change(screen.getByPlaceholderText('المدينة'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'التالي' }))
+    expect(onNext).not.toHaveBeenCalled()
+  })
+
+  it('accepts initialCountry prop and passes it to onNext', () => {
+    const onNext = vi.fn()
+    render(<ProfileStep onNext={onNext} initialCountry="IQ" />)
+    fireEvent.change(screen.getByPlaceholderText('اسم الصيدلية'), { target: { value: 'صيدلية بغداد' } })
+    fireEvent.change(screen.getByPlaceholderText('اسم المالك'), { target: { value: 'علي' } })
+    fireEvent.change(screen.getByPlaceholderText('رقم الواتساب'), { target: { value: '07901234567' } })
+    fireEvent.change(screen.getByPlaceholderText('المدينة'), { target: { value: 'بغداد' } })
+    fireEvent.click(screen.getByRole('button', { name: 'التالي' }))
+    expect(onNext).toHaveBeenCalledWith(expect.objectContaining({ country: 'IQ' }))
+  })
 })

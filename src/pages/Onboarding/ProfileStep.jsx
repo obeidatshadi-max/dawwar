@@ -1,26 +1,39 @@
 import { useState } from 'react'
 
-export default function ProfileStep({ onNext }) {
+export default function ProfileStep({ onNext, initialCountry = 'JO' }) {
   const [form, setForm] = useState({
     pharmacy_name: '',
     owner_name: '',
     phone: '',
     city: '',
-    country: 'JO',
+    country: initialCountry,
   })
+  const [submitting, setSubmitting] = useState(false)
 
   function update(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
   }
 
   function isValid() {
-    return form.pharmacy_name && form.owner_name && form.phone && form.city
+    return (
+      form.pharmacy_name.trim() &&
+      form.owner_name.trim() &&
+      form.phone.trim() &&
+      form.city.trim()
+    )
   }
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!isValid()) return
-    onNext(form)
+    if (submitting || !isValid()) return
+    setSubmitting(true)
+    onNext({
+      ...form,
+      pharmacy_name: form.pharmacy_name.trim(),
+      owner_name: form.owner_name.trim(),
+      phone: form.phone.trim(),
+      city: form.city.trim(),
+    })
   }
 
   const inputClass = 'w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-brand-primary'
@@ -51,7 +64,7 @@ export default function ProfileStep({ onNext }) {
 
         <button
           type="submit"
-          disabled={!isValid()}
+          disabled={submitting || !isValid()}
           className="w-full bg-brand-primary text-white font-bold py-3 rounded-xl mt-2 disabled:opacity-50"
         >
           التالي

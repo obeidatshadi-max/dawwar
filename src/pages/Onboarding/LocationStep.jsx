@@ -19,6 +19,7 @@ export default function LocationStep({ onNext }) {
   }
 
   function skip() {
+    if (status === 'loading') return
     onNext({ lat: null, lng: null, location_label: null })
   }
 
@@ -48,7 +49,11 @@ export default function LocationStep({ onNext }) {
         {status === 'loading' ? 'جارٍ التحديد...' : 'تحديد الموقع'}
       </button>
 
-      <button onClick={skip} className="text-brand-muted text-sm underline">
+      <button
+        onClick={skip}
+        disabled={status === 'loading'}
+        className="text-brand-muted text-sm underline disabled:opacity-40"
+      >
         تخطي الآن
       </button>
     </div>
@@ -56,15 +61,16 @@ export default function LocationStep({ onNext }) {
 }
 
 async function reverseGeocode(lat, lng) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`
-    )
-    const data = await res.json()
-    const city = data.address?.city || data.address?.town || data.address?.village || ''
-    const suburb = data.address?.suburb || ''
-    return [city, suburb].filter(Boolean).join(' - ')
-  } catch {
-    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-  }
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(8000),
+    headers: { 'User-Agent': 'dawwar-app/1.0' },
+  })
+  if (!res.ok) throw new Error(`Nominatim ${res.status}`)
+  const data = await res.json()
+  const city = data.address?.city || data.address?.town || data.address?.village || ''
+  const suburb = data.address?.suburb || ''
+  const label = [city, suburb].filter(Boolean).join(' - ')
+  if (!label) throw new Error('empty address')
+  return label
 }
