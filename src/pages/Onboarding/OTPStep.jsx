@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { verifyOTP } from '../../hooks/useAuth'
+import { verifyEmailOTP } from '../../hooks/useAuth'
 
-export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
+export default function OTPStep({ email, onNext, onBack }) {
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -12,7 +12,7 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
     setLoading(true)
     setError('')
     try {
-      await verifyOTP(phone, token, country)
+      await verifyEmailOTP(email, token)
       onNext()
     } catch (err) {
       setError('الرمز غير صحيح أو انتهت صلاحيته.')
@@ -26,7 +26,7 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
       <div>
         <h1 className="text-2xl font-bold text-brand-text">رمز التحقق</h1>
         <p className="text-brand-muted mt-1 text-sm">
-          أُرسل رمز SMS إلى {phone}
+          أُرسل رمز مكون من ٦ أرقام إلى {email}
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
         </button>
 
         <button type="button" onClick={onBack} disabled={loading} className="text-brand-muted text-sm text-center disabled:opacity-40">
-          تغيير الرقم
+          تغيير البريد الإلكتروني
         </button>
       </form>
     </div>

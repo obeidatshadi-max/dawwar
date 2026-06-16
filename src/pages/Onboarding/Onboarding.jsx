@@ -12,16 +12,16 @@ const STEPS = ['phone', 'otp', 'profile', 'location']
 
 export default function Onboarding() {
   const [step, setStep] = useState('phone')
-  const [country, setCountry] = useState('JO')
-  const [phone, setPhone] = useState('')
+  const [country] = useState('JO')
+  const [email, setEmail] = useState('')
   const [profileData, setProfileData] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const { setProfile } = useAuthStore()
   const navigate = useNavigate()
 
-  function handlePhoneNext(p) {
-    setPhone(p)
+  function handlePhoneNext(e) {
+    setEmail(e)
     setStep('otp')
   }
 
@@ -75,15 +75,11 @@ export default function Onboarding() {
 
       <div className="flex-1">
         {step === 'phone' && (
-          <PhoneStep
-            onNext={handlePhoneNext}
-            country={country}
-          />
+          <PhoneStep onNext={handlePhoneNext} />
         )}
         {step === 'otp' && (
           <OTPStep
-            phone={phone}
-            country={country}
+            email={email}
             onNext={handleOTPNext}
             onBack={() => setStep('phone')}
           />

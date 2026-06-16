@@ -2,46 +2,42 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import PhoneStep from './PhoneStep'
 
-// Mock the useAuth hook
 vi.mock('../../hooks/useAuth', () => ({
-  sendOTP: vi.fn().mockResolvedValue(undefined),
+  sendEmailOTP: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('PhoneStep', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+describe('PhoneStep (email mode)', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('renders email input', () => {
+    render(<PhoneStep onNext={vi.fn()} />)
+    expect(screen.getByPlaceholderText('name@example.com')).toBeInTheDocument()
   })
 
-  it('renders Arabic phone input', () => {
-    render(<PhoneStep onNext={vi.fn()} country="JO" />)
-    expect(screen.getByPlaceholderText(/0791/)).toBeInTheDocument()
-  })
-
-  it('calls onNext with phone when form submitted', async () => {
+  it('calls onNext with email when submitted', async () => {
     const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} country="JO" />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '0791234567' } })
+    render(<PhoneStep onNext={onNext} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
-    await waitFor(() => {
-      expect(onNext).toHaveBeenCalledWith('0791234567')
-    })
+    await waitFor(() => expect(onNext).toHaveBeenCalledWith('test@example.com'))
   })
 
-  it('does not call onNext when phone is empty', () => {
+  it('does not call onNext when email missing @', () => {
     const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} country="JO" />)
+    render(<PhoneStep onNext={onNext} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'notanemail' } })
     fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
     expect(onNext).not.toHaveBeenCalled()
   })
 
-  it('shows Arabic error when sendOTP rejects', async () => {
-    const { sendOTP } = await import('../../hooks/useAuth')
-    sendOTP.mockRejectedValueOnce(new Error('network error'))
+  it('shows Arabic error when sendEmailOTP rejects', async () => {
+    const { sendEmailOTP } = await import('../../hooks/useAuth')
+    sendEmailOTP.mockRejectedValueOnce(new Error('network error'))
     const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} country="JO" />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '0791234567' } })
+    render(<PhoneStep onNext={onNext} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
-    await waitFor(() => expect(screen.getByText('تعذر إرسال الرمز. تأكد من الرقم.')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('تعذر إرسال الرمز. تحقق من البريد الإلكتروني.')).toBeInTheDocument())
     expect(onNext).not.toHaveBeenCalled()
   })
 })
