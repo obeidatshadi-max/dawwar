@@ -9,6 +9,8 @@ import CreatePost from './pages/CreatePost/CreatePost'
 import Inbox from './pages/Messages/Inbox'
 import Thread from './pages/Messages/Thread'
 import Networks from './pages/Networks/Networks'
+import CreateNetwork from './pages/Networks/CreateNetwork'
+import AdminPanel from './pages/Networks/AdminPanel'
 import Profile from './pages/Profile/Profile'
 
 function PrivateRoute({ children }) {
@@ -58,10 +60,10 @@ export default function App() {
         <PrivateRoute><AppLayout><Networks /></AppLayout></PrivateRoute>
       } />
       <Route path="/networks/new" element={
-        <PrivateRoute><Networks /></PrivateRoute>
+        <PrivateRoute><CreateNetwork /></PrivateRoute>
       } />
       <Route path="/networks/:networkId/admin" element={
-        <PrivateRoute><AppLayout><Networks /></AppLayout></PrivateRoute>
+        <PrivateRoute><AppLayout><AdminPanel /></AppLayout></PrivateRoute>
       } />
       <Route path="/profile" element={
         <PrivateRoute><AppLayout><Profile /></AppLayout></PrivateRoute>
