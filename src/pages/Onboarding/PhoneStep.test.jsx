@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import PhoneStep from './PhoneStep'
 
 vi.mock('../../hooks/useAuth', () => ({
-  sendEmailOTP: vi.fn().mockResolvedValue(undefined),
+  sendMagicLink: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('PhoneStep (email mode)', () => {
+describe('PhoneStep (magic link)', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it('renders email input', () => {
@@ -14,30 +14,39 @@ describe('PhoneStep (email mode)', () => {
     expect(screen.getByPlaceholderText('name@example.com')).toBeInTheDocument()
   })
 
-  it('calls onNext with email when submitted', async () => {
-    const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
-    await waitFor(() => expect(onNext).toHaveBeenCalledWith('test@example.com'))
+  it('submit button labeled إرسال الرابط', () => {
+    render(<PhoneStep onNext={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /إرسال الرابط/ })).toBeInTheDocument()
   })
 
-  it('does not call onNext when email missing @', () => {
-    const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} />)
+  it('shows waiting screen after successful send', async () => {
+    render(<PhoneStep onNext={vi.fn()} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
+    await waitFor(() => expect(screen.getByText('تفقد بريدك الإلكتروني')).toBeInTheDocument())
+  })
+
+  it('submit button disabled when email missing @', () => {
+    render(<PhoneStep onNext={vi.fn()} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'notanemail' } })
-    fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
-    expect(onNext).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /إرسال الرابط/ })).toBeDisabled()
   })
 
-  it('shows Arabic error when sendEmailOTP rejects', async () => {
-    const { sendEmailOTP } = await import('../../hooks/useAuth')
-    sendEmailOTP.mockRejectedValueOnce(new Error('network error'))
-    const onNext = vi.fn()
-    render(<PhoneStep onNext={onNext} />)
+  it('shows Arabic error when sendMagicLink rejects', async () => {
+    const { sendMagicLink } = await import('../../hooks/useAuth')
+    sendMagicLink.mockRejectedValueOnce(new Error('network error'))
+    render(<PhoneStep onNext={vi.fn()} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
-    await waitFor(() => expect(screen.getByText('تعذر إرسال الرمز. تحقق من البريد الإلكتروني.')).toBeInTheDocument())
-    expect(onNext).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
+    await waitFor(() => expect(screen.getByText('تعذر إرسال الرابط. تحقق من البريد الإلكتروني.')).toBeInTheDocument())
+  })
+
+  it('تغيير البريد button resets to input screen', async () => {
+    render(<PhoneStep onNext={vi.fn()} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
+    await waitFor(() => screen.getByText('تفقد بريدك الإلكتروني'))
+    fireEvent.click(screen.getByRole('button', { name: /تغيير البريد الإلكتروني/ }))
+    expect(screen.getByPlaceholderText('name@example.com')).toBeInTheDocument()
   })
 })

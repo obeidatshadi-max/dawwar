@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { sendEmailOTP } from '../../hooks/useAuth'
+import { sendMagicLink } from '../../hooks/useAuth'
 
 export default function PhoneStep({ onNext }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
@@ -12,13 +13,38 @@ export default function PhoneStep({ onNext }) {
     setLoading(true)
     setError('')
     try {
-      await sendEmailOTP(email.trim())
-      onNext(email.trim())
+      await sendMagicLink(email.trim())
+      setSent(true)
     } catch (err) {
-      setError('تعذر إرسال الرمز. تحقق من البريد الإلكتروني.')
+      setError('تعذر إرسال الرابط. تحقق من البريد الإلكتروني.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (sent) {
+    return (
+      <div className="flex flex-col gap-6 text-center">
+        <div className="text-5xl">📬</div>
+        <div>
+          <h1 className="text-2xl font-bold text-brand-text">تفقد بريدك الإلكتروني</h1>
+          <p className="text-brand-muted mt-2 text-sm">
+            أرسلنا رابطاً إلى
+          </p>
+          <p className="text-brand-primary font-medium mt-1 text-sm" dir="ltr">{email}</p>
+          <p className="text-brand-muted mt-3 text-sm">
+            انقر على الرابط في البريد للمتابعة. قد يستغرق دقيقة.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setSent(false); setEmail('') }}
+          className="text-brand-muted text-sm underline"
+        >
+          تغيير البريد الإلكتروني
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -46,7 +72,7 @@ export default function PhoneStep({ onNext }) {
           disabled={loading || !email.includes('@')}
           className="w-full bg-brand-primary text-white font-bold py-3 rounded-xl disabled:opacity-50"
         >
-          {loading ? 'جارٍ الإرسال...' : 'التالي'}
+          {loading ? 'جارٍ الإرسال...' : 'إرسال الرابط'}
         </button>
       </form>
     </div>

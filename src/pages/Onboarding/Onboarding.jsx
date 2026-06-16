@@ -1,33 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import { saveProfile } from '../../hooks/useAuth'
 import PhoneStep from './PhoneStep'
-import OTPStep from './OTPStep'
 import ProfileStep from './ProfileStep'
 import LocationStep from './LocationStep'
 
-const STEPS = ['phone', 'otp', 'profile', 'location']
+const STEPS = ['email', 'profile', 'location']
 
 export default function Onboarding() {
-  const [step, setStep] = useState('phone')
+  const [step, setStep] = useState('email')
   const [country] = useState('JO')
-  const [email, setEmail] = useState('')
   const [profileData, setProfileData] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const { setProfile } = useAuthStore()
+  const { session, profile, setProfile } = useAuthStore()
   const navigate = useNavigate()
 
-  function handlePhoneNext(e) {
-    setEmail(e)
-    setStep('otp')
-  }
-
-  function handleOTPNext() {
-    setStep('profile')
-  }
+  // Magic link lands here: session arrives but no profile yet → skip to profile step
+  useEffect(() => {
+    if (session && !profile && step === 'email') {
+      setStep('profile')
+    }
+  }, [session, profile, step])
 
   function handleProfileNext(data) {
     setProfileData(data)
@@ -74,15 +70,8 @@ export default function Onboarding() {
       )}
 
       <div className="flex-1">
-        {step === 'phone' && (
-          <PhoneStep onNext={handlePhoneNext} />
-        )}
-        {step === 'otp' && (
-          <OTPStep
-            email={email}
-            onNext={handleOTPNext}
-            onBack={() => setStep('phone')}
-          />
+        {step === 'email' && (
+          <PhoneStep onNext={() => {}} />
         )}
         {step === 'profile' && (
           <ProfileStep
