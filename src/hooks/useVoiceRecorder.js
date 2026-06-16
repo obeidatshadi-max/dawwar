@@ -13,11 +13,12 @@ export function useVoiceRecorder() {
   const chunksRef = useRef([])
   const timerRef = useRef(null)
   const startTimeRef = useRef(null)
+  const audioUrlRef = useRef(null)
 
   useEffect(() => () => {
     clearTimeout(timerRef.current)
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
-  }, [audioUrl])
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+  }, [])
 
   async function startRecording() {
     setError('')
@@ -38,6 +39,7 @@ export function useVoiceRecorder() {
         const blob = new Blob(chunksRef.current, { type: mimeType })
         const url = URL.createObjectURL(blob)
         const secs = Math.round((Date.now() - startTimeRef.current) / 1000)
+        audioUrlRef.current = url
         setAudioBlob(blob)
         setAudioUrl(url)
         setDuration(secs)
@@ -59,7 +61,8 @@ export function useVoiceRecorder() {
   }
 
   function clearRecording() {
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    audioUrlRef.current = null
     setAudioBlob(null)
     setAudioUrl(null)
     setDuration(0)
