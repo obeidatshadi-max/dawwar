@@ -26,6 +26,7 @@ import { useAuthStore } from '../store/authStore'
 
 describe('JoinNetwork', () => {
   const mockNavigate = vi.fn()
+  let setItemSpy
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -33,6 +34,7 @@ describe('JoinNetwork', () => {
   })
 
   afterEach(() => {
+    setItemSpy?.mockRestore()
     vi.useRealTimers()
   })
 
@@ -54,7 +56,7 @@ describe('JoinNetwork', () => {
     useSearchParams.mockReturnValue([params])
     useAuthStore.mockReturnValue({ session: null, loading: false })
 
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+    setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
 
     render(<JoinNetwork />)
 
@@ -62,8 +64,6 @@ describe('JoinNetwork', () => {
       expect(setItemSpy).toHaveBeenCalledWith('pending_invite_token', token)
       expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { replace: true })
     })
-
-    setItemSpy.mockRestore()
   })
 
   it('valid invite → joins network + redirects to /feed', async () => {
