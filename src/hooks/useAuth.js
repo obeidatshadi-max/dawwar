@@ -67,10 +67,11 @@ export async function saveProfile(userId, data) {
 
 // Exported for testing
 export function normalizePhone(phone, country = 'JO') {
-  const digits = phone.replace(/\D/g, '')
   const countryCode = country === 'IQ' ? '964' : '962'
+  // Already E.164
+  if (phone.startsWith('+')) return phone
+  const digits = phone.replace(/\D/g, '')
   if (digits.startsWith('00')) return '+' + digits.slice(2)
   if (digits.startsWith('0'))  return '+' + countryCode + digits.slice(1)
-  if (!digits.startsWith('+')) return '+' + digits
-  return phone
+  return '+' + digits
 }

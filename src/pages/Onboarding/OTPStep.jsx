@@ -34,9 +34,9 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
         <input
           type="text"
           inputMode="numeric"
-          maxLength={6}
+          autoComplete="one-time-code"
           value={token}
-          onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
+          onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder="000000"
           className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-4 text-brand-text text-3xl tracking-[1rem] text-center focus:outline-none focus:border-brand-primary"
           dir="ltr"
@@ -52,7 +52,7 @@ export default function OTPStep({ phone, country = 'JO', onNext, onBack }) {
           {loading ? 'جارٍ التحقق...' : 'تأكيد'}
         </button>
 
-        <button type="button" onClick={onBack} className="text-brand-muted text-sm text-center">
+        <button type="button" onClick={onBack} disabled={loading} className="text-brand-muted text-sm text-center disabled:opacity-40">
           تغيير الرقم
         </button>
       </form>

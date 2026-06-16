@@ -8,7 +8,8 @@ export default function PhoneStep({ onNext, country = 'JO' }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!phone.trim()) return
+    const digits = phone.replace(/\D/g, '')
+    if (!phone.trim() || digits.length < 9) return
     setLoading(true)
     setError('')
     try {
@@ -42,7 +43,7 @@ export default function PhoneStep({ onNext, country = 'JO' }) {
 
         <button
           type="submit"
-          disabled={loading || !phone.trim()}
+          disabled={loading || phone.replace(/\D/g, '').length < 9}
           className="w-full bg-brand-primary text-white font-bold py-3 rounded-xl disabled:opacity-50"
         >
           {loading ? 'جارٍ الإرسال...' : 'التالي'}

@@ -33,4 +33,15 @@ describe('PhoneStep', () => {
     fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
     expect(onNext).not.toHaveBeenCalled()
   })
+
+  it('shows Arabic error when sendOTP rejects', async () => {
+    const { sendOTP } = await import('../../hooks/useAuth')
+    sendOTP.mockRejectedValueOnce(new Error('network error'))
+    const onNext = vi.fn()
+    render(<PhoneStep onNext={onNext} country="JO" />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '0791234567' } })
+    fireEvent.click(screen.getByRole('button', { name: /التالي/ }))
+    await waitFor(() => expect(screen.getByText('تعذر إرسال الرمز. تأكد من الرقم.')).toBeInTheDocument())
+    expect(onNext).not.toHaveBeenCalled()
+  })
 })
