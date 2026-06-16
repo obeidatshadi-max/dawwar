@@ -4,6 +4,7 @@ import { useAuthInit } from './hooks/useAuth'
 import Onboarding from './pages/Onboarding/Onboarding'
 import JoinNetwork from './pages/JoinNetwork'
 import Feed from './pages/Feed/Feed'
+import CreatePost from './pages/CreatePost/CreatePost'
 
 function PrivateRoute({ children }) {
   const { session, loading } = useAuthStore()
@@ -37,6 +38,9 @@ export default function App() {
       } />
       <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
       <Route path="/join" element={<JoinNetwork />} />
+      <Route path="/create" element={
+        <PrivateRoute><CreatePost /></PrivateRoute>
+      } />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>
   )
