@@ -25,11 +25,10 @@ export async function compressImage(file, maxWidth = 1200, quality = 0.8) {
 }
 
 export async function uploadMedia(supabase, bucket, path, blob, mimeType) {
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(path, blob, { contentType: mimeType, upsert: true })
+  const storage = supabase.storage.from(bucket)
+  const { error } = await storage.upload(path, blob, { contentType: mimeType, upsert: true })
   if (error) throw error
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+  const { data } = storage.getPublicUrl(path)
   return data.publicUrl
 }
 

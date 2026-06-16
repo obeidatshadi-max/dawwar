@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { compressImage, uploadMedia, haversineKm } from './mediaUtils'
 
 // ── haversineKm ──────────────────────────────────────────────
@@ -32,6 +32,8 @@ describe('compressImage', () => {
     }
     vi.spyOn(document, 'createElement').mockReturnValue(mockCanvas)
   })
+
+  afterEach(() => { vi.restoreAllMocks() })
 
   it('returns a Blob', async () => {
     const file = new File(['x'], 'test.jpg', { type: 'image/jpeg' })
