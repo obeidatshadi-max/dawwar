@@ -81,7 +81,8 @@ export default function AdminPanel() {
       .from('network_members')
       .delete()
       .eq('id', memberId)
-    if (!delErr) setMembers((prev) => prev.filter((m) => m.id !== memberId))
+    if (delErr) setError(delErr?.message ?? 'خطأ في إزالة العضو')
+    else setMembers((prev) => prev.filter((m) => m.id !== memberId))
   }
 
   function copyLink() {
@@ -137,7 +138,7 @@ export default function AdminPanel() {
                   min="1"
                   max="500"
                   value={inviteMax}
-                  onChange={(e) => setInviteMax(e.target.value)}
+                  onChange={(e) => setInviteMax(Number(e.target.value))}
                   className="w-full bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-brand-text text-sm outline-none"
                 />
               </div>
