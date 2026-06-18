@@ -10,6 +10,7 @@ import ProductSearch from './ProductSearch'
 import { useProductSuggestions } from '../../hooks/useProductSuggestions'
 import { useNotificationPermission } from '../../hooks/useRequestNotifications'
 import { saveProfile } from '../../hooks/useAuth'
+import Spinner from '../../components/Spinner'
 
 function LocationNudge() {
   const { session, profile, setProfile } = useAuthStore()
@@ -168,11 +169,7 @@ export default function Feed() {
     friendIds,
   })
 
-  if (networksLoading) return (
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
+  if (networksLoading) return <Spinner />
 
   if (networks.length === 0) return (
     <div className="min-h-screen bg-brand-bg pb-24">

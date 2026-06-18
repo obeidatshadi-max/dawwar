@@ -33,7 +33,8 @@ export default function Profile() {
       if (e2) throw e2
       setProfile({ ...profile, photo_url: bust })
     } catch (err) {
-      setError(err?.message ?? 'تعذر رفع الصورة')
+      console.error('[photo upload]', err)
+      setError('تعذر رفع الصورة')
     } finally {
       setPhotoUploading(false)
     }
