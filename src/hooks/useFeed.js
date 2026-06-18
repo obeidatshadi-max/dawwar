@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { haversineKm } from '../lib/mediaUtils'
 import { expiryBucket } from '../lib/filters'
 
-export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newest', viewerLat, viewerLng, radiusKm = null, expiryFilter = null }) {
+export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newest', viewerLat, viewerLng, radiusKm = null, expiryFilter = null, friendIds = null }) {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -22,6 +22,15 @@ export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newe
 
       if (filter !== 'all') query = query.eq('type', filter)
       if (search.trim()) query = query.ilike('product_name', `%${search.trim()}%`)
+
+      if (friendIds) {
+        if (friendIds.length === 0) {
+          setPosts([])
+          setLoading(false)
+          return
+        }
+        query = query.in('author_id', friendIds)
+      }
 
       const { data, error: fetchErr } = await query
       if (fetchErr) throw fetchErr
@@ -53,7 +62,7 @@ export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newe
     } finally {
       setLoading(false)
     }
-  }, [networkId, filter, search, sortBy, viewerLat, viewerLng, radiusKm, expiryFilter])
+  }, [networkId, filter, search, sortBy, viewerLat, viewerLng, radiusKm, expiryFilter, friendIds ? friendIds.join(',') : friendIds])
 
   useEffect(() => {
     fetchPosts()

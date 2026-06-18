@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useNetworks } from '../../hooks/useNetworks'
 import { useFeed } from '../../hooks/useFeed'
+import { useCloseFriends } from '../../hooks/useCloseFriends'
 import PostCard from '../../components/PostCard'
 import FilterBar from './FilterBar'
 import ProductSearch from './ProductSearch'
@@ -136,6 +137,13 @@ function DemoFeed() {
 export default function Feed() {
   const { profile } = useAuthStore()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const friendsMode = searchParams.get('friends') === '1'
+  const { friendIds: rawFriendIds } = useCloseFriends()
+  const friendIds = useMemo(
+    () => (friendsMode ? rawFriendIds : null),
+    [friendsMode, rawFriendIds.join(',')]
+  )
   const { networks, loading: networksLoading } = useNetworks()
 
   const [selectedNetworkId, setSelectedNetworkId] = useState(null)
@@ -157,6 +165,7 @@ export default function Feed() {
     viewerLng: profile?.lng,
     radiusKm,
     expiryFilter,
+    friendIds,
   })
 
   if (networksLoading) return (
@@ -196,6 +205,12 @@ export default function Feed() {
     <div className="min-h-screen bg-brand-bg">
       <NotifyBanner />
       <LocationNudge />
+      {friendsMode && (
+        <div className="px-4 pt-3">
+          <p className="text-brand-text text-sm font-medium">عروض الأصدقاء المقرّبين</p>
+          <button onClick={() => navigate('/feed')} className="text-brand-primary text-xs">عرض كل العروض</button>
+        </div>
+      )}
       {networks.length > 1 && (
         <div className="flex gap-2 px-4 pt-4 pb-2 overflow-x-auto scrollbar-none">
           {networks.map((n) => (
