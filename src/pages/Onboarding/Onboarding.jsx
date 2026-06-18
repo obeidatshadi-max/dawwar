@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import { saveProfile } from '../../hooks/useAuth'
+import { compressImage, uploadMedia } from '../../lib/mediaUtils'
 import PhoneStep from './PhoneStep'
 import ProfileStep from './ProfileStep'
 import LocationStep from './LocationStep'
@@ -48,7 +49,14 @@ export default function Onboarding() {
     try {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (error || !user) throw error ?? new Error('جلسة منتهية، يرجى تسجيل الدخول مجددًا')
-      const merged = { ...profileData, ...locationData }
+      const { photo_file, ...rest } = profileData ?? {}
+      const merged = { ...rest, ...locationData }
+      if (photo_file) {
+        const blob = await compressImage(photo_file)
+        merged.photo_url = await uploadMedia(
+          supabase, 'post-media', `pharmacy/${user.id}.jpg`, blob, 'image/jpeg'
+        )
+      }
       await saveProfile(user.id, merged)
       setProfile(merged)
       // Demo-network enrollment is handled by a DB trigger on profiles insert.
