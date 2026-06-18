@@ -1,5 +1,6 @@
 import VoicePlayer from './VoicePlayer'
 import { haversineKm } from '../lib/mediaUtils'
+import { expiryBucket, EXPIRY_META } from '../lib/filters'
 
 function discountPct(price, original) {
   if (!original || !price || original <= price) return null
@@ -22,7 +23,7 @@ function formatDistance(km) {
   return `${km.toFixed(1)} كم`
 }
 
-export default function PostCard({ post, viewerLat, viewerLng, onMessage, onDetail }) {
+export default function PostCard({ post, viewerLat, viewerLng, onMessage, onDetail, isDemo = false }) {
   const { type, product_name, quantity, unit, price, original_price, currency,
     expiry_date, phone, author, media = [] } = post
 
@@ -35,20 +36,33 @@ export default function PostCard({ post, viewerLat, viewerLng, onMessage, onDeta
 
   const pct = discountPct(price, original_price)
   const expiryWarn = isExpiryWarning(expiry_date)
+  const bucket = type === 'offer' ? expiryBucket(expiry_date) : null
+  const bMeta = bucket ? EXPIRY_META[bucket] : null
 
   const waText = encodeURIComponent(`مرحباً، رأيت منشورك على دوّار عن ${product_name}`)
   const waLink = `https://wa.me/${phone?.replace(/\D/g, '')}?text=${waText}`
 
   return (
-    <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
+    <div className={`bg-brand-card border rounded-2xl overflow-hidden ${isDemo ? 'border-amber-400/40' : 'border-brand-border'}`}>
+      {isDemo && (
+        <div className="bg-amber-50 border-b border-amber-300/50 px-4 py-1.5 text-center dark:bg-amber-900/20">
+          <span className="text-amber-700 text-xs font-semibold">🔬 نموذج توضيحي — ليس عرضاً حقيقياً</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${
             type === 'offer' ? 'bg-brand-offer' : 'bg-brand-wanted'
           }`}>
-            {type === 'offer' ? 'قرب انتهاء' : 'مطلوب'}
+            {type === 'offer' ? 'عرض' : 'مطلوب'}
           </span>
+          {bMeta && (
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${bMeta.bg} ${bMeta.text}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${bMeta.dot}`} />
+              {bMeta.label}
+            </span>
+          )}
           {dist !== null && (
             <span className="text-xs text-brand-muted bg-brand-bg px-2 py-0.5 rounded-full">
               {formatDistance(dist)}
@@ -74,8 +88,8 @@ export default function PostCard({ post, viewerLat, viewerLng, onMessage, onDeta
         )}
 
         {expiry_date && (
-          <p className={`text-xs mt-1 ${expiryWarn ? 'text-brand-warning' : 'text-brand-muted'}`}>
-            {expiryWarn && '⚠ '}انتهاء: {formatDate(expiry_date)}
+          <p className={`text-xs mt-1 font-medium ${bMeta ? bMeta.text : 'text-brand-muted'}`}>
+            {bucket === 'lt1' && '⚠ '}انتهاء: {formatDate(expiry_date)}
           </p>
         )}
       </div>
@@ -103,26 +117,34 @@ export default function PostCard({ post, viewerLat, viewerLng, onMessage, onDeta
 
       {/* Actions */}
       <div className="flex gap-2 px-4 pb-4 pt-1 border-t border-brand-border mt-1">
-        <button
-          onClick={() => onMessage?.(post.id)}
-          className="flex-1 py-2 rounded-xl bg-brand-primary text-white text-sm font-medium"
-        >
-          أريد هذا
-        </button>
-        <a
-          href={waLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 py-2 rounded-xl bg-brand-whatsapp text-white text-sm font-medium text-center"
-        >
-          واتساب
-        </a>
-        <button
-          onClick={() => onDetail?.(post.id)}
-          className="px-4 py-2 rounded-xl border border-brand-border text-brand-muted text-sm"
-        >
-          تفاصيل
-        </button>
+        {isDemo ? (
+          <p className="flex-1 text-center text-brand-muted text-xs py-2 leading-relaxed">
+            انضم إلى شبكتك وستظهر هنا عروض حقيقية من صيدليات في منطقتك
+          </p>
+        ) : (
+          <>
+            <button
+              onClick={() => onMessage?.(post.id)}
+              className="flex-1 py-2 rounded-xl bg-brand-primary text-white text-sm font-medium"
+            >
+              أريد هذا
+            </button>
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2 rounded-xl bg-brand-whatsapp text-white text-sm font-medium text-center"
+            >
+              واتساب
+            </a>
+            <button
+              onClick={() => onDetail?.(post.id)}
+              className="px-4 py-2 rounded-xl border border-brand-border text-brand-muted text-sm"
+            >
+              تفاصيل
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

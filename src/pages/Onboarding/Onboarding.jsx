@@ -30,6 +30,17 @@ export default function Onboarding() {
     setStep('location')
   }
 
+  async function handleBack() {
+    if (step === 'location') {
+      setStep('profile')
+    } else if (step === 'profile') {
+      // First step after sign-in → backing out means restart with a different number
+      await supabase.auth.signOut()
+      setProfile(null)
+      setStep('email')
+    }
+  }
+
   async function handleLocationNext(locationData) {
     if (saving) return
     setSaving(true)
@@ -40,6 +51,8 @@ export default function Onboarding() {
       const merged = { ...profileData, ...locationData }
       await saveProfile(user.id, merged)
       setProfile(merged)
+      // Demo-network enrollment is handled by a DB trigger on profiles insert.
+
       const pendingToken = sessionStorage.getItem('pending_invite_token')
       if (pendingToken) {
         sessionStorage.removeItem('pending_invite_token')
@@ -58,11 +71,24 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col px-6 py-10 max-w-md mx-auto">
-      <div className="w-full bg-brand-border rounded-full h-1 mb-8">
-        <div
-          className="bg-brand-primary h-1 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+      <div className="flex items-center gap-3 mb-8">
+        {step !== 'email' && (
+          <button
+            onClick={handleBack}
+            className="text-brand-muted flex-shrink-0"
+            aria-label="رجوع"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+        <div className="flex-1 bg-brand-border rounded-full h-1">
+          <div
+            className="bg-brand-primary h-1 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       {saveError && (

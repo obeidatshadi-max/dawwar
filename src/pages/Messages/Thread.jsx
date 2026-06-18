@@ -7,14 +7,12 @@ export default function Thread() {
   const { postId } = useParams()
   const navigate = useNavigate()
   const { session } = useAuthStore()
-  const { messages, loading, error, send } = useThread(postId)
+  const { messages, loading, error, send, recipientId, otherName } = useThread(postId)
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [sendErr, setSendErr] = useState('')
   const bottomRef = useRef(null)
   const myId = session?.user?.id
-
-  const recipientId = messages.find((m) => m.sender?.id !== myId)?.sender?.id ?? null
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -25,7 +23,7 @@ export default function Thread() {
     setSending(true)
     setSendErr('')
     try {
-      await send({ recipientId, body })
+      await send({ body })
       setBody('')
     } catch (err) {
       setSendErr(err?.message ?? 'خطأ في الإرسال')
@@ -40,8 +38,6 @@ export default function Thread() {
       handleSend()
     }
   }
-
-  const otherName = messages.find((m) => m.sender?.id !== myId)?.sender?.pharmacy_name ?? 'المحادثة'
 
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col">

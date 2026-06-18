@@ -1,11 +1,11 @@
-const RADIUS_OPTIONS = [
-  { label: 'المدينة كلها', value: null },
-  { label: '٢ كم', value: 2 },
-  { label: '٥ كم', value: 5 },
-  { label: '١٠ كم', value: 10 },
-]
+import { RADIUS_OPTIONS, EXPIRY_FILTERS, EXPIRY_META } from '../../lib/filters'
 
-export default function FilterBar({ filter, onFilter, sortBy, onSort, radiusKm, onRadius }) {
+export default function FilterBar({
+  filter, onFilter,
+  sortBy, onSort,
+  radiusKm, onRadius,
+  expiryFilter, onExpiry,
+}) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-1 bg-brand-card rounded-xl p-1">
@@ -22,6 +22,26 @@ export default function FilterBar({ filter, onFilter, sortBy, onSort, radiusKm, 
             {label}
           </button>
         ))}
+      </div>
+
+      {/* Expiry buckets — colour coded */}
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+        {EXPIRY_FILTERS.map((opt) => {
+          const active = expiryFilter === opt.value
+          const meta = opt.value ? EXPIRY_META[opt.value] : null
+          return (
+            <button
+              key={String(opt.value)}
+              onClick={() => onExpiry(opt.value)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                active ? 'bg-brand-primary text-white border-brand-primary' : 'bg-brand-card text-brand-muted border-brand-border'
+              }`}
+            >
+              {meta && <span className={`w-2 h-2 rounded-full ${meta.dot}`} />}
+              {opt.label}
+            </button>
+          )
+        })}
       </div>
 
       <div className="flex gap-2">

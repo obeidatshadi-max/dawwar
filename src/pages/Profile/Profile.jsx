@@ -5,7 +5,8 @@ import { useAuthStore } from '../../store/authStore'
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { profile, setProfile, clear } = useAuthStore()
+  const { session, profile, setProfile, clear } = useAuthStore()
+  const isAdmin = session?.user?.email === 'shadi@psychologytobusiness.com'
 
   const [editing, setEditing] = useState(false)
   const [pharmacyName, setPharmacyName] = useState(profile?.pharmacy_name ?? '')
@@ -130,6 +131,15 @@ export default function Profile() {
               </div>
             ))}
           </div>
+        )}
+
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin/seed')}
+            className="w-full py-3 bg-amber-500 text-white rounded-xl text-sm font-semibold mt-2 flex items-center justify-center gap-2"
+          >
+            🌱 أداة البذر (مدير)
+          </button>
         )}
 
         <button

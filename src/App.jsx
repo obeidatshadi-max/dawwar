@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useAuthInit } from './hooks/useAuth'
+import { usePushSync } from './hooks/useRequestNotifications'
 import AppLayout from './components/AppLayout'
 import Onboarding from './pages/Onboarding/Onboarding'
 import JoinNetwork from './pages/JoinNetwork'
@@ -12,6 +13,7 @@ import Networks from './pages/Networks/Networks'
 import CreateNetwork from './pages/Networks/CreateNetwork'
 import AdminPanel from './pages/Networks/AdminPanel'
 import Profile from './pages/Profile/Profile'
+import SeedTool from './pages/Admin/SeedTool'
 
 function PrivateRoute({ children }) {
   const { session, loading } = useAuthStore()
@@ -37,6 +39,7 @@ function PublicOnlyRoute({ children }) {
 
 export default function App() {
   useAuthInit()
+  usePushSync()
 
   return (
     <Routes>
@@ -67,6 +70,9 @@ export default function App() {
       } />
       <Route path="/profile" element={
         <PrivateRoute><AppLayout><Profile /></AppLayout></PrivateRoute>
+      } />
+      <Route path="/admin/seed" element={
+        <PrivateRoute><SeedTool /></PrivateRoute>
       } />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>

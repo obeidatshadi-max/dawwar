@@ -3,50 +3,69 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import PhoneStep from './PhoneStep'
 
 vi.mock('../../hooks/useAuth', () => ({
-  sendMagicLink: vi.fn().mockResolvedValue(undefined),
+  loginWithPhonePin: vi.fn(),
+  signupWithPhonePin: vi.fn().mockResolvedValue(undefined),
+  signInAnonymous: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('PhoneStep (magic link)', () => {
+function fill(phone = '07712345678', pin = '123456') {
+  fireEvent.change(screen.getByPlaceholderText('07XX XXX XXXX'), { target: { value: phone } })
+  fireEvent.change(screen.getByPlaceholderText('● ● ● ● ● ●'), { target: { value: pin } })
+}
+
+describe('PhoneStep (phone + PIN)', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('renders email input', () => {
-    render(<PhoneStep onNext={vi.fn()} />)
-    expect(screen.getByPlaceholderText('name@example.com')).toBeInTheDocument()
+  it('renders phone and PIN inputs', () => {
+    render(<PhoneStep />)
+    expect(screen.getByPlaceholderText('07XX XXX XXXX')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('● ● ● ● ● ●')).toBeInTheDocument()
   })
 
-  it('submit button labeled إرسال الرابط', () => {
-    render(<PhoneStep onNext={vi.fn()} />)
-    expect(screen.getByRole('button', { name: /إرسال الرابط/ })).toBeInTheDocument()
+  it('submit disabled until phone + 6-digit PIN', () => {
+    render(<PhoneStep />)
+    const btn = screen.getByRole('button', { name: /دخول \/ تسجيل/ })
+    expect(btn).toBeDisabled()
+    fill()
+    expect(btn).not.toBeDisabled()
   })
 
-  it('shows waiting screen after successful send', async () => {
-    render(<PhoneStep onNext={vi.fn()} />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
-    await waitFor(() => expect(screen.getByText('تفقد بريدك الإلكتروني')).toBeInTheDocument())
+  it('existing user → loginWithPhonePin', async () => {
+    const { loginWithPhonePin } = await import('../../hooks/useAuth')
+    loginWithPhonePin.mockResolvedValueOnce(undefined)
+    render(<PhoneStep />)
+    fill()
+    fireEvent.click(screen.getByRole('button', { name: /دخول \/ تسجيل/ }))
+    await waitFor(() => expect(loginWithPhonePin).toHaveBeenCalledWith('07712345678', '123456', 'IQ'))
   })
 
-  it('submit button disabled when email missing @', () => {
-    render(<PhoneStep onNext={vi.fn()} />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'notanemail' } })
-    expect(screen.getByRole('button', { name: /إرسال الرابط/ })).toBeDisabled()
+  it('new user → both country logins fail, falls back to signup', async () => {
+    const { loginWithPhonePin, signupWithPhonePin } = await import('../../hooks/useAuth')
+    // IQ login fails, JO login fails, post-signup login succeeds
+    loginWithPhonePin
+      .mockRejectedValueOnce(new Error('Invalid login credentials'))
+      .mockRejectedValueOnce(new Error('Invalid login credentials'))
+      .mockResolvedValueOnce(undefined)
+    render(<PhoneStep />)
+    fill()
+    fireEvent.click(screen.getByRole('button', { name: /دخول \/ تسجيل/ }))
+    await waitFor(() => expect(signupWithPhonePin).toHaveBeenCalled())
   })
 
-  it('shows Arabic error when sendMagicLink rejects', async () => {
-    const { sendMagicLink } = await import('../../hooks/useAuth')
-    sendMagicLink.mockRejectedValueOnce(new Error('network error'))
-    render(<PhoneStep onNext={vi.fn()} />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
-    await waitFor(() => expect(screen.getByText('تعذر إرسال الرابط. تحقق من البريد الإلكتروني.')).toBeInTheDocument())
+  it('wrong PIN for existing user → shows error', async () => {
+    const { loginWithPhonePin, signupWithPhonePin } = await import('../../hooks/useAuth')
+    loginWithPhonePin.mockRejectedValue(new Error('Invalid login credentials'))
+    signupWithPhonePin.mockRejectedValueOnce(new Error('User already registered'))
+    render(<PhoneStep />)
+    fill()
+    fireEvent.click(screen.getByRole('button', { name: /دخول \/ تسجيل/ }))
+    await waitFor(() => expect(screen.getByText('الرمز السري غير صحيح لهذا الرقم.')).toBeInTheDocument())
   })
 
-  it('تغيير البريد button resets to input screen', async () => {
-    render(<PhoneStep onNext={vi.fn()} />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /إرسال الرابط/ }))
-    await waitFor(() => screen.getByText('تفقد بريدك الإلكتروني'))
-    fireEvent.click(screen.getByRole('button', { name: /تغيير البريد الإلكتروني/ }))
-    expect(screen.getByPlaceholderText('name@example.com')).toBeInTheDocument()
+  it('quick start calls signInAnonymous', async () => {
+    const { signInAnonymous } = await import('../../hooks/useAuth')
+    render(<PhoneStep />)
+    fireEvent.click(screen.getByRole('button', { name: /تجربة سريعة بدون رقم/ }))
+    await waitFor(() => expect(signInAnonymous).toHaveBeenCalled())
   })
 })

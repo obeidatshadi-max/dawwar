@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { haversineKm } from '../lib/mediaUtils'
+import { expiryBucket } from '../lib/filters'
 
-export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newest', viewerLat, viewerLng, radiusKm = null }) {
+export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newest', viewerLat, viewerLng, radiusKm = null, expiryFilter = null }) {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -27,6 +28,10 @@ export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newe
 
       let result = data ?? []
 
+      if (expiryFilter) {
+        result = result.filter((p) => expiryBucket(p.expiry_date) === expiryFilter)
+      }
+
       if (viewerLat && viewerLng) {
         result = result.map((p) => ({
           ...p,
@@ -48,7 +53,7 @@ export function useFeed({ networkId, filter = 'all', search = '', sortBy = 'newe
     } finally {
       setLoading(false)
     }
-  }, [networkId, filter, search, sortBy, viewerLat, viewerLng, radiusKm])
+  }, [networkId, filter, search, sortBy, viewerLat, viewerLng, radiusKm, expiryFilter])
 
   useEffect(() => {
     fetchPosts()
