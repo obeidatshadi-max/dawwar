@@ -8,6 +8,7 @@ export default function Step3Media({ onNext, onBack, initialData = {} }) {
   const [images, setImages] = useState(initialData.images ?? [])
   const [description, setDescription] = useState(initialData.description ?? '')
   const fileInputRef = useRef(null)
+  const boxCameraRef = useRef(null)
   const { status, audioBlob, audioUrl, error: recError, startRecording, stopRecording, clearRecording } = useVoiceRecorder()
 
   const previewUrls = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images])
@@ -34,6 +35,30 @@ export default function Step3Media({ onNext, onBack, initialData = {} }) {
   return (
     <div className="flex flex-col gap-5">
       <h2 className="text-brand-text text-xl font-bold">الصور والصوت</h2>
+
+      <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-3">
+        <p className="text-brand-text text-sm font-medium mb-1">📦 صورة علبة الدواء (اختياري)</p>
+        <p className="text-brand-muted text-xs mb-3 leading-relaxed">
+          صوّر العلبة بحيث يظهر تاريخ الانتهاء بوضوح — يزيد ثقة المشتري
+        </p>
+        <button
+          type="button"
+          onClick={() => boxCameraRef.current?.click()}
+          disabled={images.length >= MAX_IMAGES}
+          className="w-full py-2.5 bg-brand-primary text-white rounded-lg text-sm font-semibold disabled:opacity-40"
+        >
+          📷 التقاط صورة العلبة
+        </button>
+        <input
+          ref={boxCameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="hidden"
+          aria-label="التقاط صورة علبة الدواء"
+        />
+      </div>
 
       <div>
         <label className="text-brand-muted text-sm mb-2 block">

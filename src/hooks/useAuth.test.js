@@ -1,29 +1,40 @@
-import { describe, it, expect } from 'vitest'
-import { normalizePhone } from './useAuth'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { renderHook, waitFor } from '@testing-library/react'
 
-describe('normalizePhone — Jordan (default)', () => {
-  it('handles local Jordan number (0-prefix → +962)', () => {
-    expect(normalizePhone('0791234567')).toBe('+962791234567')
-  })
-  it('handles 00 prefix', () => {
-    expect(normalizePhone('00962791234567')).toBe('+962791234567')
-  })
-  it('passes through E.164', () => {
-    expect(normalizePhone('+962791234567')).toBe('+962791234567')
-  })
-  it('handles bare digits (no prefix)', () => {
-    expect(normalizePhone('962791234567')).toBe('+962791234567')
-  })
-})
+let authCallback
+let resolveProfile
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      onAuthStateChange: vi.fn((cb) => {
+        authCallback = cb
+        return { data: { subscription: { unsubscribe: vi.fn() } } }
+      }),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(() => new Promise((res) => { resolveProfile = res })),
+    })),
+  },
+}))
 
-describe('normalizePhone — Iraq', () => {
-  it('handles local Iraq number (0-prefix → +964)', () => {
-    expect(normalizePhone('07901234567', 'IQ')).toBe('+9647901234567')
+import { useAuthInit } from './useAuth'
+import { useAuthStore } from '../store/authStore'
+
+describe('useAuthInit', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ session: null, profile: null, loading: true })
   })
-  it('handles 00964 prefix', () => {
-    expect(normalizePhone('009647901234567', 'IQ')).toBe('+9647901234567')
-  })
-  it('passes through E.164 Iraq', () => {
-    expect(normalizePhone('+9647901234567', 'IQ')).toBe('+9647901234567')
+
+  it('clears loading on first auth event before the profile resolves', async () => {
+    renderHook(() => useAuthInit())
+    authCallback('INITIAL_SESSION', { user: { id: 'u1' } })
+    await waitFor(() => expect(useAuthStore.getState().loading).toBe(false))
+    // profile fetch still pending
+    expect(useAuthStore.getState().profile).toBe(null)
+    // resolve it afterwards
+    resolveProfile({ data: { id: 'u1', pharmacy_name: 'صيدلية' }, error: null })
+    await waitFor(() => expect(useAuthStore.getState().profile?.id).toBe('u1'))
   })
 })

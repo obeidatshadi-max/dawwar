@@ -75,4 +75,15 @@ describe('Profile', () => {
     expect(supabase.auth.signOut).toHaveBeenCalled()
     expect(mockClear).toHaveBeenCalled()
   })
+
+  it('renders the pharmacy photo when photo_url is present', async () => {
+    const { useAuthStore } = await import('../../store/authStore')
+    useAuthStore.mockReturnValue({
+      profile: { ...mockProfile, photo_url: 'https://x/pharmacy/user-1.jpg' },
+      setProfile: mockSetProfile,
+      clear: mockClear,
+    })
+    const { container } = wrap()
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://x/pharmacy/user-1.jpg')
+  })
 })

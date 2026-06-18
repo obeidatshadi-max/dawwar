@@ -9,17 +9,16 @@ export function useAuthInit() {
     let initialised = false
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session)
-        if (session) {
-          const profile = await fetchProfile(session.user.id)
-          setProfile(profile)
-        } else {
-          clear()
-        }
         if (!initialised) {
           initialised = true
           setLoading(false)
+        }
+        if (session) {
+          fetchProfile(session.user.id).then(setProfile)
+        } else {
+          clear()
         }
       }
     )
@@ -38,18 +37,41 @@ async function fetchProfile(userId) {
   return data
 }
 
-export async function sendOTP(phone, country = 'JO') {
-  const { error } = await supabase.auth.signInWithOtp({
-    phone: normalizePhone(phone, country),
+// One-tap trial sign-in: no email/password. Creates a real session (real
+// auth.uid so RLS works); just can't be recovered on another device.
+export async function signInAnonymous() {
+  const { error } = await supabase.auth.signInAnonymously()
+  if (error) throw error
+}
+
+// --- Phone + PIN login (recoverable across devices, no SMS) ---
+// The phone number is the account identity; we map it to a synthetic email so
+// Supabase email/password auth handles it. Same phone+PIN → same account.
+export function phoneToDigits(phone, country = 'IQ') {
+  const cc = country === 'JO' ? '962' : '964'
+  let d = (phone || '').replace(/\D/g, '')
+  if (d.startsWith('00')) d = d.slice(2)
+  else if (d.startsWith('0')) d = cc + d.slice(1)
+  else if (!d.startsWith(cc)) d = cc + d
+  return d
+}
+
+function phoneToEmail(phone, country) {
+  return `${phoneToDigits(phone, country)}@dawwar.app`
+}
+
+export async function loginWithPhonePin(phone, pin, country = 'IQ') {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: phoneToEmail(phone, country),
+    password: pin,
   })
   if (error) throw error
 }
 
-export async function verifyOTP(phone, token, country = 'JO') {
-  const { error } = await supabase.auth.verifyOtp({
-    phone: normalizePhone(phone, country),
-    token,
-    type: 'sms',
+export async function signupWithPhonePin(phone, pin, country = 'IQ') {
+  const { error } = await supabase.auth.signUp({
+    email: phoneToEmail(phone, country),
+    password: pin,
   })
   if (error) throw error
 }
@@ -57,7 +79,21 @@ export async function verifyOTP(phone, token, country = 'JO') {
 export async function sendMagicLink(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${window.location.origin}/onboarding`,
+    },
+  })
+  if (error) throw error
+}
+
+// Verify the 6-digit code from the email. Works inside the installed PWA,
+// so the session persists there (unlike clicking the link, which opens Safari).
+export async function verifyEmailOTP(email, token) {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: token.trim(),
+    type: 'email',
   })
   if (error) throw error
 }
@@ -71,15 +107,4 @@ export async function saveProfile(userId, data) {
     .from('profiles')
     .upsert({ id: userId, ...data })
   if (error) throw error
-}
-
-// Exported for testing
-export function normalizePhone(phone, country = 'JO') {
-  const countryCode = country === 'IQ' ? '964' : '962'
-  // Already E.164
-  if (phone.startsWith('+')) return phone
-  const digits = phone.replace(/\D/g, '')
-  if (digits.startsWith('00')) return '+' + digits.slice(2)
-  if (digits.startsWith('0'))  return '+' + countryCode + digits.slice(1)
-  return '+' + digits
 }

@@ -93,8 +93,23 @@ export function useMessages() {
 export function useThread(postId) {
   const { session } = useAuthStore()
   const [messages, setMessages] = useState([])
+  const [postMeta, setPostMeta] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // Fetch the post's author so we can address the very first message,
+  // before any messages exist in the thread.
+  useEffect(() => {
+    if (!postId) return
+    let cancelled = false
+    supabase
+      .from('posts')
+      .select('author_id, product_name, author:profiles(id, pharmacy_name)')
+      .eq('id', postId)
+      .single()
+      .then(({ data }) => { if (!cancelled) setPostMeta(data) })
+    return () => { cancelled = true }
+  }, [postId])
 
   const fetchMessages = useCallback(async () => {
     if (!session || !postId) return
@@ -140,8 +155,23 @@ export function useThread(postId) {
     return () => supabase.removeChannel(channel)
   }, [session, postId, fetchMessages])
 
-  async function send({ recipientId, body }) {
-    if (!body?.trim() || !session || !postId) return
+  const myId = session?.user?.id
+  const otherParty = messages.find((m) => m.sender?.id !== myId)?.sender ?? null
+
+  // Recipient = the other person in an existing thread, or (for the very
+  // first message) the post author — as long as that isn't me.
+  let recipientId = otherParty?.id ?? null
+  if (!recipientId && postMeta && postMeta.author_id !== myId) {
+    recipientId = postMeta.author_id
+  }
+
+  const otherName =
+    otherParty?.pharmacy_name ??
+    (postMeta?.author_id !== myId ? postMeta?.author?.pharmacy_name : null) ??
+    'المحادثة'
+
+  async function send({ body }) {
+    if (!body?.trim() || !session || !postId || !recipientId) return
     const { error: sendErr } = await supabase.from('messages').insert({
       post_id: postId,
       sender_id: session.user.id,
@@ -151,5 +181,5 @@ export function useThread(postId) {
     if (sendErr) throw sendErr
   }
 
-  return { messages, loading, error, send }
+  return { messages, loading, error, send, recipientId, otherName }
 }

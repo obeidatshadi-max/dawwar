@@ -24,6 +24,7 @@ function makeQueryMock(data, error = null) {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     ilike: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     then: vi.fn((resolve) => resolve({ data, error })),
     catch: vi.fn().mockReturnThis(),
@@ -97,5 +98,19 @@ describe('useFeed', () => {
     const { result } = renderHook(() => useFeed({ networkId: NETWORK_ID }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toContain('RLS error')
+  })
+
+  it('filters to close friends when friendIds provided', async () => {
+    const chain = makeQueryMock(mockPosts)
+    const { result } = renderHook(() => useFeed({ networkId: NETWORK_ID, friendIds: ['u1'] }))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(chain.in).toHaveBeenCalledWith('author_id', ['u1'])
+  })
+
+  it('returns no posts when friendIds is an empty array', async () => {
+    makeQueryMock(mockPosts)
+    const { result } = renderHook(() => useFeed({ networkId: NETWORK_ID, friendIds: [] }))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.posts).toHaveLength(0)
   })
 })

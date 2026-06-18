@@ -78,13 +78,23 @@ describe('Step2Price (offer)', () => {
     expect(screen.getByText(/العملة/)).toBeInTheDocument()
   })
 
-  it('calculates discount % live', async () => {
+  it('calculates discount % live from original + sale price', async () => {
     wrap(<Step2Price type="offer" onNext={vi.fn()} onBack={vi.fn()} />)
-    const inputs = screen.getAllByRole('spinbutton')
+    const inputs = screen.getAllByRole('spinbutton') // [original, discount, sale]
     fireEvent.change(inputs[0], { target: { value: '10' } })
-    fireEvent.change(inputs[1], { target: { value: '7' } })
+    fireEvent.change(inputs[2], { target: { value: '7' } })
     await waitFor(() => {
-      expect(screen.getByText('-30%')).toBeInTheDocument()
+      expect(screen.getByText(/خصم 30/)).toBeInTheDocument()
+    })
+  })
+
+  it('computes sale price from original + discount %', async () => {
+    wrap(<Step2Price type="offer" onNext={vi.fn()} onBack={vi.fn()} />)
+    const inputs = screen.getAllByRole('spinbutton') // [original, discount, sale]
+    fireEvent.change(inputs[0], { target: { value: '100' } })
+    fireEvent.change(inputs[1], { target: { value: '25' } })
+    await waitFor(() => {
+      expect(inputs[2].value).toBe('75')
     })
   })
 

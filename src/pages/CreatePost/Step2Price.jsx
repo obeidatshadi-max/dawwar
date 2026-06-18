@@ -7,14 +7,34 @@ export default function Step2Price({ type, onNext, onBack, initialData = {} }) {
 
   const [originalPrice, setOriginalPrice] = useState(initialData.original_price ?? '')
   const [price, setPrice] = useState(initialData.price ?? '')
+  const [discountPct, setDiscountPct] = useState(
+    (initialData.original_price && initialData.price && Number(initialData.original_price) > Number(initialData.price))
+      ? String(Math.round((1 - Number(initialData.price) / Number(initialData.original_price)) * 100))
+      : ''
+  )
   const [currency, setCurrency] = useState(initialData.currency ?? defaultCurrency)
   const [phone, setPhone] = useState(initialData.phone ?? profile?.phone ?? '')
   const [urgencyNote, setUrgencyNote] = useState(initialData.urgency_note ?? '')
   const [error, setError] = useState('')
 
-  const discount = (type === 'offer' && originalPrice && price && Number(originalPrice) > Number(price))
-    ? Math.round((1 - Number(price) / Number(originalPrice)) * 100)
-    : null
+  const round = (x) => Math.round(x * 1000) / 1000
+
+  // Two-way binding: editing any of original / discount / sale keeps the trio consistent.
+  function handleOriginal(v) {
+    setOriginalPrice(v)
+    if (discountPct !== '' && v) setPrice(String(round(Number(v) * (1 - Number(discountPct) / 100))))
+  }
+  function handleDiscount(v) {
+    const n = v === '' ? '' : String(Math.max(0, Math.min(99, Math.round(Number(v)))))
+    setDiscountPct(n)
+    if (n !== '' && originalPrice) setPrice(String(round(Number(originalPrice) * (1 - Number(n) / 100))))
+  }
+  function handlePrice(v) {
+    setPrice(v)
+    if (originalPrice && Number(originalPrice) > 0 && v) {
+      setDiscountPct(String(Math.round((1 - Number(v) / Number(originalPrice)) * 100)))
+    }
+  }
 
   function handleNext() {
     if (!phone.trim()) { setError('رقم الواتساب مطلوب'); return }
@@ -44,10 +64,26 @@ export default function Step2Price({ type, onNext, onBack, initialData = {} }) {
                 min="0"
                 step="0.001"
                 value={originalPrice}
-                onChange={(e) => setOriginalPrice(e.target.value)}
+                onChange={(e) => handleOriginal(e.target.value)}
                 className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 text-brand-text outline-none focus:border-brand-primary"
               />
             </div>
+            <div className="w-24">
+              <label className="text-brand-muted text-sm mb-1 block">الخصم %</label>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                inputMode="numeric"
+                value={discountPct}
+                onChange={(e) => handleDiscount(e.target.value)}
+                placeholder="٪"
+                className="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-3 text-brand-text outline-none focus:border-brand-primary text-center"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 items-end">
             <div className="flex-1">
               <label className="text-brand-muted text-sm mb-1 block">سعر البيع</label>
               <input
@@ -55,13 +91,10 @@ export default function Step2Price({ type, onNext, onBack, initialData = {} }) {
                 min="0"
                 step="0.001"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 text-brand-text outline-none focus:border-brand-primary"
+                onChange={(e) => handlePrice(e.target.value)}
+                className="w-full bg-brand-card border border-brand-primary/60 rounded-xl px-4 py-3 text-brand-text font-semibold outline-none focus:border-brand-primary"
               />
             </div>
-          </div>
-
-          <div className="flex gap-3 items-center">
             <div className="flex-1">
               <label className="text-brand-muted text-sm mb-1 block">العملة</label>
               <select
@@ -73,13 +106,13 @@ export default function Step2Price({ type, onNext, onBack, initialData = {} }) {
                 <option value="IQD">دينار عراقي (IQD)</option>
               </select>
             </div>
-            {discount !== null && (
-              <div className="text-center">
-                <span className="text-brand-offer text-2xl font-bold">-{discount}%</span>
-                <p className="text-brand-muted text-xs">خصم</p>
-              </div>
-            )}
           </div>
+
+          {discountPct !== '' && Number(discountPct) > 0 && (
+            <p className="text-brand-offer text-sm font-bold text-center">
+              خصم {discountPct}% — يظهر للمشتري على البطاقة
+            </p>
+          )}
         </>
       )}
 

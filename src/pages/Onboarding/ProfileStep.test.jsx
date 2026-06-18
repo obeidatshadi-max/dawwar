@@ -66,4 +66,17 @@ describe('ProfileStep', () => {
     fireEvent.click(screen.getByRole('button', { name: 'التالي' }))
     expect(onNext).toHaveBeenCalledWith(expect.objectContaining({ country: 'IQ' }))
   })
+
+  it('includes photo_file in payload only when a photo is selected', () => {
+    const onNext = vi.fn()
+    render(<ProfileStep onNext={onNext} />)
+    fireEvent.change(screen.getByPlaceholderText('اسم الصيدلية'), { target: { value: 'صيدلية النور' } })
+    fireEvent.change(screen.getByPlaceholderText('اسم المالك'), { target: { value: 'أحمد' } })
+    fireEvent.change(screen.getByPlaceholderText('رقم الواتساب'), { target: { value: '0791234567' } })
+    fireEvent.change(screen.getByPlaceholderText('المدينة'), { target: { value: 'بغداد' } })
+    const file = new File(['x'], 'shop.jpg', { type: 'image/jpeg' })
+    fireEvent.change(screen.getByLabelText('صورة الصيدلية'), { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: 'التالي' }))
+    expect(onNext).toHaveBeenCalledWith(expect.objectContaining({ photo_file: file }))
+  })
 })

@@ -21,7 +21,7 @@ const basePost = {
 describe('PostCard', () => {
   it('shows offer badge for type=offer', () => {
     render(<PostCard post={basePost} />)
-    expect(screen.getByText('قرب انتهاء')).toBeInTheDocument()
+    expect(screen.getByText('عرض')).toBeInTheDocument()
   })
 
   it('shows wanted badge for type=wanted', () => {
@@ -40,11 +40,12 @@ describe('PostCard', () => {
     expect(screen.getByText('-33%')).toBeInTheDocument()
   })
 
-  it('shows expiry warning with amber styling when < 90 days', () => {
-    const { container } = render(<PostCard post={basePost} />)
-    const expiryEl = container.querySelector('.text-brand-warning')
-    expect(expiryEl).not.toBeNull()
-    expect(expiryEl.textContent).toContain('انتهاء')
+  it('shows colour-coded expiry date for offers', () => {
+    render(<PostCard post={basePost} />)
+    const expiryEl = screen.getByText(/انتهاء:/)
+    expect(expiryEl).toBeInTheDocument()
+    // colour-coded by bucket, not the neutral muted class
+    expect(expiryEl.className).not.toContain('text-brand-muted')
   })
 
   it('WhatsApp link has correct wa.me URL with pre-filled message', () => {
