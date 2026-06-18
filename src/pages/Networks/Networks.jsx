@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useNetworks } from '../../hooks/useNetworks'
+import CloseFriends from './CloseFriends'
 
 export default function Networks() {
   const navigate = useNavigate()
@@ -22,6 +23,8 @@ export default function Networks() {
           + إنشاء شبكة
         </button>
       </div>
+
+      <CloseFriends />
 
       {networks.length === 0 && (
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
