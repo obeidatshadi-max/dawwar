@@ -38,24 +38,10 @@ describe('useNetworkMembers', () => {
     expect(result.current.members.map((m) => m.id)).toEqual(['a', 'b'])
   })
 
-  it('returns empty members when user belongs to zero networks', async () => {
-    let queryExecutions = 0
-    supabase.from.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve) => {
-        queryExecutions += 1
-        // Always return empty data on first logical query
-        // If networkIds is empty, the hook returns early and never calls in()
-        // So we track: if in() is called, it means a second query executed (bad)
-        return resolve({ data: [], error: null })
-      }),
-    }))
-    const inMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve) => resolve({ data: null, error: new Error('in() called - second query ran') })),
-    })
+  it('returns empty members and skips the second query when user belongs to zero networks', async () => {
+    // .in() is only used by the second query (members of my networks). With no
+    // networks the hook must return early, so .in() must never be called.
+    const inMock = vi.fn().mockReturnThis()
     supabase.from.mockImplementation(() => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -65,7 +51,6 @@ describe('useNetworkMembers', () => {
     const { result } = renderHook(() => useNetworkMembers())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.members).toEqual([])
-    // The in() method should never be called (it's only called in the second query when networkIds is not empty)
     expect(inMock).not.toHaveBeenCalled()
   })
 })
