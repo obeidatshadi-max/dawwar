@@ -9,17 +9,16 @@ export function useAuthInit() {
     let initialised = false
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session)
-        if (session) {
-          const profile = await fetchProfile(session.user.id)
-          setProfile(profile)
-        } else {
-          clear()
-        }
         if (!initialised) {
           initialised = true
           setLoading(false)
+        }
+        if (session) {
+          fetchProfile(session.user.id).then(setProfile)
+        } else {
+          clear()
         }
       }
     )
